@@ -6,6 +6,7 @@ every 20 ms, and says "played" when a reply's done.
 """
 
 import asyncio
+import sys
 import base64
 import io
 import json
@@ -114,6 +115,10 @@ class StandInCallClient:
 
     def release(self):
         self.released = True
+
+
+# The real one, before the fixture below swaps it for a stand-in.
+REAL_DAILY_LIBRARY = video.daily_library
 
 
 @pytest.fixture(autouse=True)
@@ -307,3 +312,24 @@ def test_a_voice_piece_fits_in_a_daily_message():
     message = {"chatfx": "voice", "reply": "0123456789ab", "audio": base64.b64encode(piece).decode(), "rate": 48000}
     # Daily takes app messages well past this; Pipecat's Tavus service sends the same size.
     assert len(json.dumps(message)) < 13_000
+
+
+def test_daily_starts_once_however_many_calls_and_whoever_starts_it(monkeypatch):
+    # A second Daily.init() stops the whole program (daily-python 0.38.0): a bot's second call used to do that.
+    from pipecat.transports.daily.transport import DailyTransportClient
+
+    starts = []
+    monkeypatch.setitem(sys.modules, "daily", SimpleNamespace(Daily=SimpleNamespace(init=lambda: starts.append(1))))
+    monkeypatch.setattr(video, "_daily_started", False)
+    monkeypatch.setattr(DailyTransportClient, "_daily_initialized", False)
+    for _ in range(3):
+        REAL_DAILY_LIBRARY()
+    assert starts == [1]
+    # DailyTransport, made after us, won't start it again either.
+    assert DailyTransportClient._daily_initialized is True
+
+    # And when DailyTransport started it first, we don't.
+    starts.clear()
+    monkeypatch.setattr(video, "_daily_started", False)
+    REAL_DAILY_LIBRARY()
+    assert starts == []

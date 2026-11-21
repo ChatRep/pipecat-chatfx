@@ -1,5 +1,10 @@
 # Changelog
 
+## 0.1.3
+
+- Fixed: a bot's second call stopped the whole program with daily-python 0.38.0 ("Execution context already exists").
+  Daily's library is now started once per program, sharing Pipecat's DailyTransport flag, so neither starts it twice.
+
 ## 0.1.2
 
 - Tested with Pipecat v1.16.0 (and daily-python 0.38.0). The example uses Pipecat 1.16.0.

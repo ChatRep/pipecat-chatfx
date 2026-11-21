@@ -108,15 +108,28 @@ def still_frame(picture: bytes, text: str | None) -> OutputImageRawFrame:
     return OutputImageRawFrame(image=image.tobytes(), size=image.size, format="RGB")
 
 
+_daily_started = False
+
+
 def daily_library():
-    """Daily's Python library (pipecat-ai[daily]), started once for the program if your transport hasn't already."""
+    """Daily's Python library (pipecat-ai[daily]), started once for the whole program.
+
+    Daily.init() may run only once per process: a second call stops the program (daily-python 0.38.0), so it can't be tried
+    and caught. Pipecat's DailyTransport keeps its own flag for the same reason, so the two share it: whichever starts Daily
+    first, neither starts it again, however many calls the bot takes.
+    """
+    global _daily_started
     import daily
 
     try:
+        from pipecat.transports.daily.transport import DailyTransportClient
+    except Exception:  # pragma: no cover - pipecat-ai[daily] is a dependency, but stay safe if it moves
+        DailyTransportClient = None
+    if not _daily_started and not getattr(DailyTransportClient, "_daily_initialized", False):
         daily.Daily.init()
-    except Exception:
-        # Already started (DailyTransport does it too).
-        pass
+    _daily_started = True
+    if DailyTransportClient is not None:
+        DailyTransportClient._daily_initialized = True
     return daily
 
 
