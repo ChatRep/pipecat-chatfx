@@ -1,5 +1,10 @@
 # Changelog
 
+## Unreleased
+
+- Docs: use Daily as the transport, for local testing and real calls (over SmallWebRTC the browser shows her lips
+  about a third of a second behind her voice). The example runs with `-t daily`.
+
 ## 0.1.3
 
 - Fixed: a bot's second call stopped the whole program with daily-python 0.38.0 ("Execution context already exists").

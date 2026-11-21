@@ -4,9 +4,9 @@ Speech to text: Deepgram. LLM: OpenAI. Voice: Cartesia. Face: ChatFX Avatar, rig
 
 Put your keys in .env (see .env.example), then:
 
-    uv run bot.py
+    uv run bot.py -t daily
 
-and open http://localhost:7860/client. Click Connect and allow the microphone: the avatar appears and says the first message.
+and open http://localhost:7860/client. Choose Daily at the top, click Connect and allow the microphone: the avatar appears and says the first message.
 """
 
 import os
@@ -40,7 +40,8 @@ AVATAR_ID = "chatfx-lois"
 VIDEO_WIDTH = 912
 VIDEO_HEIGHT = 512
 
-# "webrtc" for testing on your machine, "daily" on Pipecat Cloud. The avatar sends 25 pictures a second.
+# Daily, for testing on your machine and for real calls (uv run bot.py -t daily). SmallWebRTC works too, but the browser
+# shows her lips about a third of a second behind her voice. The avatar sends 25 pictures a second.
 transport_params = {
     "daily": lambda: DailyParams(
         audio_in_enabled=True,

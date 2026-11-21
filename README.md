@@ -46,7 +46,7 @@ pipeline = Pipeline([
 ```
 
 ```python
-TransportParams(  # or DailyParams
+DailyParams(  # Daily, for local testing and real calls
     audio_in_enabled=True,
     audio_out_enabled=True,
     video_out_enabled=True,
@@ -56,6 +56,9 @@ TransportParams(  # or DailyParams
     video_out_framerate=25,
 )
 ```
+
+**Use Daily as your transport, for local testing and real calls.** Your Daily key is already set for the avatar. Over
+SmallWebRTC, the browser shows her lips about a third of a second behind her voice.
 
 That's all the code. When your pipeline ends (or is cancelled when the visitor leaves), the avatar's session ends too, so
 billing stops. Your page shows the bot's video as before: the avatar is the bot.
@@ -70,11 +73,11 @@ A complete bot (Deepgram listening, OpenAI, Cartesia voice, ChatFX Avatar face) 
 ```bash
 cd examples
 cp .env.example .env   # add your keys
-uv run bot.py
+uv run bot.py -t daily
 ```
 
-Then open http://localhost:7860/client, click Connect and allow the microphone. The avatar appears and says the first
-message; talk over it to see it stop.
+Then open http://localhost:7860/client, choose **Daily** at the top, click Connect and allow the microphone. The avatar
+appears and says the first message; talk over it to see it stop.
 
 ## What it does for you
 
