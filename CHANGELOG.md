@@ -1,6 +1,6 @@
 # Changelog
 
-## Unreleased
+## 0.1.4
 
 - Docs: use Daily as the transport, for local testing and real calls (over SmallWebRTC the browser shows her lips
   about a third of a second behind her voice). The example runs with `-t daily`.
