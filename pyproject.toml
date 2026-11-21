@@ -1,0 +1,41 @@
+[build-system]
+requires = ["hatchling"]
+build-backend = "hatchling.build"
+
+[project]
+name = "pipecat-chatfx"
+dynamic = ["version"]
+description = "ChatFX Avatar for Pipecat: a real-time talking face for your Pipecat bot"
+readme = "README.md"
+license = "BSD-2-Clause"
+license-files = ["LICENSE"]
+requires-python = ">=3.10"
+authors = [{ name = "ChatRep, Inc.", email = "service@chatfx.com" }]
+keywords = ["pipecat", "avatar", "video", "voice", "realtime", "chatfx", "daily"]
+classifiers = [
+  "Intended Audience :: Developers",
+  "Programming Language :: Python :: 3",
+  "Topic :: Multimedia :: Video",
+  "Topic :: Scientific/Engineering :: Artificial Intelligence",
+]
+dependencies = ["pipecat-ai[daily]>=1.8", "aiohttp>=3.9"]
+
+[project.urls]
+Homepage = "https://chatfx.com/avatar/"
+Documentation = "https://chatfx.com/support/avatar-pipecat/"
+Repository = "https://github.com/ChatRep/pipecat-chatfx"
+Changelog = "https://github.com/ChatRep/pipecat-chatfx/blob/main/CHANGELOG.md"
+
+[dependency-groups]
+dev = ["pytest>=8", "pytest-asyncio>=0.23"]
+
+[tool.hatch.version]
+path = "src/pipecat_chatfx/version.py"
+
+[tool.hatch.build.targets.wheel]
+packages = ["src/pipecat_chatfx"]
+
+[tool.pytest.ini_options]
+asyncio_mode = "auto"
+asyncio_default_fixture_loop_scope = "function"
+pythonpath = ["src"]
