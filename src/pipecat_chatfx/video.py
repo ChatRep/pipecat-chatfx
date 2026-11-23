@@ -592,7 +592,7 @@ class ChatFXVideoService(AIService):
         if self._seat and self._reply:
             self._seat.send({"chatfx": "voice", "reply": self._reply, "audio": base64.b64encode(pcm).decode(), "rate": rate})
 
-    def _send_sound(self, frame: TTSAudioRawFrame) -> None:
+    def _send_sound(self, frame: TTSAudioRawFrame | SpeechOutputAudioRawFrame) -> None:
         if self._held and self._held_rate != frame.sample_rate:
             self._flush()
         self._held_rate = frame.sample_rate
@@ -636,7 +636,10 @@ class ChatFXVideoService(AIService):
                 await self.start_ttfb_metrics()
             else:
                 await self.push_frame(frame, direction)
-        elif isinstance(frame, TTSAudioRawFrame):
+        elif isinstance(frame, (TTSAudioRawFrame, SpeechOutputAudioRawFrame)) and direction == FrameDirection.DOWNSTREAM:
+            # A TTS service's sound, or a speech-to-speech service's voice (OpenAILiveLLMService streams its replies as
+            # SpeechOutputAudioRawFrame): either way it's the bot's voice, so it goes to the face. The avatar's own voice
+            # coming back is pushed on from here, never through process_frame.
             if not self._speaking:
                 # Some TTS services send sound without a TTSStartedFrame first.
                 await self._face_first()

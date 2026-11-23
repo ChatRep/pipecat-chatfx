@@ -4,7 +4,7 @@ A real-time talking face for your Pipecat bot. Your bot's voice goes to the avat
 drawn together so the lips match, as your bot's own video and audio. You keep your own listening, AI and voice; ChatFX
 adds the face, billed by the minute.
 
-Tested with Pipecat v1.15.0 and v1.16.0 (Python 3.12). Built and maintained by the ChatFX Avatar team: questions and
+Tested with Pipecat v1.15.0, v1.16.0 and v1.17.0 (Python 3.12). Built and maintained by the ChatFX Avatar team: questions and
 issues go to [this repository's issues](https://github.com/ChatRep/pipecat-chatfx/issues) or service@chatfx.com.
 
 ## Install
@@ -26,7 +26,8 @@ Put both in your bot's environment (your `.env`, or your Pipecat Cloud secret se
 
 ## Use it
 
-Put `ChatFXVideoService` right after your TTS service, and turn on your transport's video out at the avatar's size:
+Put `ChatFXVideoService` right after your TTS service (or, with a speech-to-speech service such as
+`OpenAILiveLLMService`, right after that service), and turn on your transport's video out at the avatar's size:
 
 ```python
 from pipecat_chatfx import ChatFXVideoService

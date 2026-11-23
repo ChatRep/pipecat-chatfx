@@ -38,6 +38,16 @@ def tts_sound(seconds: float) -> TTSAudioRawFrame:
     return TTSAudioRawFrame(audio=b"\x10\x00" * int(RATE * seconds), sample_rate=RATE, num_channels=1)
 
 
+# A speech-to-speech service's voice (OpenAILiveLLMService): SpeechOutputAudioRawFrame in small pieces, its own bytes so
+# it can't be mistaken for the avatar's voice coming back.
+BOT_SPEECH = b"\x30\x00"
+
+
+def speech_sound(seconds: float, piece: float = 0.05) -> list[SpeechOutputAudioRawFrame]:
+    n = int(RATE * piece)
+    return [SpeechOutputAudioRawFrame(audio=BOT_SPEECH * n, sample_rate=RATE, num_channels=1) for _ in range(round(seconds / piece))]
+
+
 class StandInAvatar:
     """The avatar's side of the room: joins, sends its face and voice, answers "played"."""
 
@@ -225,6 +235,41 @@ async def test_a_reply_goes_to_the_face_and_the_face_and_voice_come_back(api):
     # The end: the avatar is told, the session ended (billing stops), the bot left, the room is gone.
     assert client.avatar.heard[-1] == {"chatfx": "end"}
     assert api.ended == ["ses_1"] and client.left and client.released and api.rooms_deleted == ["room1"]
+
+
+async def test_a_speech_to_speech_services_voice_goes_to_the_face_too(api):
+    # OpenAILiveLLMService streams its replies as SpeechOutputAudioRawFrame between TTSStartedFrame and TTSStoppedFrame
+    # (Pipecat 1.17 fixed the same for Tavus and HeyGen): the avatar speaks it, and none of it reaches the visitor directly.
+    avatar = service(api)
+    down, _ = await run_test(
+        avatar,
+        frames_to_send=[OutputTransportReadyFrame(), SleepFrame(sleep=0.6), TTSStartedFrame(), *speech_sound(0.25), TTSStoppedFrame(), SleepFrame(sleep=0.4)],
+    )
+    client = StandInCallClient.made[-1]
+    assert [len(p) for p in voice_pieces(client)] == [4800, 4800, 2400]
+    assert all(set(p[::2]) == {0x30} for p in voice_pieces(client))
+    assert {"chatfx": "voice", "reply": client.avatar.heard[0]["reply"], "done": True} in client.avatar.heard
+    assert not any(isinstance(f, SpeechOutputAudioRawFrame) and f.audio.startswith(BOT_SPEECH * 4) for f in down)
+    # What came back is the avatar's own voice, with its face.
+    assert SpeechOutputAudioRawFrame in kinds(down) and any(isinstance(f, OutputImageRawFrame) and f.size == (8, 6) for f in down)
+
+
+async def test_a_speech_to_speech_voice_without_started_frames_still_goes_to_the_face(api):
+    avatar = service(api)
+    down, _ = await run_test(avatar, frames_to_send=[OutputTransportReadyFrame(), SleepFrame(sleep=0.6), *speech_sound(0.2), SleepFrame(sleep=0.4)])
+    assert sum(len(p) for p in voice_pieces(StandInCallClient.made[-1])) == int(RATE * 0.2) * 2
+    assert not any(isinstance(f, SpeechOutputAudioRawFrame) and f.audio.startswith(BOT_SPEECH * 4) for f in down)
+
+
+async def test_without_a_face_a_speech_to_speech_voice_plays_as_the_bots_own(api):
+    api.avatar_comes = False
+    avatar = service(api, face_first_seconds=0)
+    down, _ = await run_test(
+        avatar,
+        frames_to_send=[OutputTransportReadyFrame(), SleepFrame(sleep=0.5), TTSStartedFrame(), *speech_sound(0.2), TTSStoppedFrame(), SleepFrame(sleep=0.1)],
+    )
+    assert sum(1 for f in down if isinstance(f, SpeechOutputAudioRawFrame) and f.audio.startswith(BOT_SPEECH)) == 4
+    assert voice_pieces(StandInCallClient.made[-1]) == []
 
 
 async def test_until_the_face_is_in_the_bot_speaks_with_its_own_voice_over_the_avatars_picture(api):
